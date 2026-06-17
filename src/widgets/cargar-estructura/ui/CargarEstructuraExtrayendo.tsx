@@ -50,7 +50,7 @@ import {
   IconUsers,
   IconX,
 } from '@tabler/icons-react';
-import { CosmosLoader } from '@/shared/ui';
+import { CosmosLoader, EmptyStateIllustration } from '@/shared/ui';
 import { CrearGrupoDrawer } from '@/features/crear-grupo';
 import { CrearUnidadDrawer } from '@/features/crear-unidad';
 import { EditarUnidadDrawer } from '@/features/editar-unidad';
@@ -869,6 +869,21 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
               </Menu>
             );
           })()}
+
+          {/* Empty state — no results after search/filter */}
+          {filteredResolved.length === 0 && skeletonCount === 0 && isCompleted && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, flex: 1, py: 4, bgcolor: 'grey.50', borderRadius: 1 }}>
+              <EmptyStateIllustration />
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <Typography sx={{ fontWeight: 600, fontSize: '1rem', lineHeight: '16px', letterSpacing: '0.15px', color: 'text.primary' }}>
+                  Sin resultados
+                </Typography>
+                <Typography sx={{ fontSize: '0.875rem', lineHeight: '16px', letterSpacing: '0.15px', color: 'text.secondary', textAlign: 'center' }}>
+                  No encontramos coincidencias para tu búsqueda.
+                </Typography>
+              </Box>
+            </Box>
+          )}
 
           {/* Skeleton rows — pending items (visible but not yet resolved), only when no filter/search active */}
           {activeFilter === 'Todas' && !q && Array.from({ length: skeletonCount }).map((_, i) => {
