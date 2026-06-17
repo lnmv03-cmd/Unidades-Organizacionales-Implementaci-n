@@ -56,7 +56,7 @@ import { RevisarBorradorDrawer, DescartarBorradorDialog } from '@/features/revis
 import type { RevisarBorradorState, DescartarBorradorState } from '@/features/revisar-borrador';
 import { useEstructuraStore } from '@/shared/model/estructura.store';
 import type { OrgNodeStatus, UnitType } from '@/shared/config/org-types';
-import { IaLabel } from '@/shared/ui';
+import { IaLabel, EmptyStateIllustration } from '@/shared/ui';
 import {
   FILTER_CHIPS,
   type FilterKey,
@@ -579,7 +579,7 @@ function InlineInputRow({ level, type, initialCode, initialName, suggestedCode, 
         onKeyDown={handleKey}
         placeholder={isGrupo ? 'Nombre del grupo...' : 'Nombre de la unidad...'}
         sx={{
-          width: '60%', mr: '6px',
+          width: '50%', mr: '6px',
           border: '1px solid', borderColor: 'primary.main',
           borderRadius: '4px', px: '8px', height: 26,
           fontSize: '0.8125rem', bgcolor: 'white', '& input': { p: 0 },
@@ -714,8 +714,24 @@ export function VisualizarEstructura({ initFromOrg = true }: { initFromOrg?: boo
       </Box>
 
       {/* Tree */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-        <Box sx={{ px: '16px' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', px: 1, pb: 1 }}>
+        {v.visibleNodes.length === 0 ? (
+          <Box sx={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 3, bgcolor: '#fbfbfb', borderRadius: 2, px: 1, py: 1.5,
+          }}>
+            <EmptyStateIllustration />
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, width: '100%' }}>
+              <Typography sx={{ fontFamily: 'Schibsted Grotesk, sans-serif', fontWeight: 600, fontSize: '1rem', lineHeight: '16px', letterSpacing: '0.15px', color: '#101840', textAlign: 'center' }}>
+                Sin resultados
+              </Typography>
+              <Typography sx={{ fontSize: '0.875rem', lineHeight: '16px', letterSpacing: '0.15px', color: 'rgba(16,24,64,0.6)', textAlign: 'center' }}>
+                No encontramos coincidencias para tu búsqueda.
+              </Typography>
+            </Box>
+          </Box>
+        ) : (
+        <Box sx={{ px: '8px' }}>
         {v.visibleNodes.map(node => (
           <Fragment key={node.id}>
             {v.inlineEdit?.nodeId === node.id ? (
@@ -807,6 +823,7 @@ export function VisualizarEstructura({ initFromOrg = true }: { initFromOrg?: boo
           </Fragment>
         ))}
         </Box>
+        )}
       </Box>
 
       {/* Global Crear menu (top-right button) */}
