@@ -36,6 +36,7 @@ import {
   IconDotsVertical,
   IconGitMerge,
   IconGripVertical,
+  IconHistory,
   IconLock,
   IconMap2,
   IconPencil,
@@ -57,6 +58,7 @@ import type { RevisarBorradorState, DescartarBorradorState } from '@/features/re
 import { useEstructuraStore } from '@/shared/model/estructura.store';
 import type { OrgNodeStatus, UnitType } from '@/shared/config/org-types';
 import { IaLabel, EmptyStateIllustration } from '@/shared/ui';
+import { HistorialDrawer, MOCK_EVENTOS } from '@/features/historial-unidad';
 import {
   FILTER_CHIPS,
   type FilterKey,
@@ -316,6 +318,7 @@ interface RowProps {
   onPlusClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onDotsClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onEditClick: () => void;
+  onHistorialClick: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -327,7 +330,7 @@ function OrgTreeRow({
   isDragging,
   onToggle, onSelect, onMouseEnter, onMouseLeave,
   onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop,
-  onPlusClick, onDotsClick, onEditClick,
+  onPlusClick, onDotsClick, onEditClick, onHistorialClick,
 }: RowProps) {
   const isInactive = node.status === 'Inactivo' || node.status === 'Descartada';
   const statusChip = node.status ? STATUS_CHIP[node.status] : undefined;
@@ -485,6 +488,14 @@ function OrgTreeRow({
               </IconButton>
             </Tooltip>
           )}
+          {isUnidad && (
+            <Tooltip title="Historial" placement="top" arrow>
+              <IconButton size="small" sx={{ p: '3px', color: 'primary.main' }}
+                onClick={e => { e.stopPropagation(); onHistorialClick(); }}>
+                <IconHistory size={14} />
+              </IconButton>
+            </Tooltip>
+          )}
           {!isRoot && (
             <Tooltip title="Más opciones" placement="top" arrow>
               <IconButton
@@ -610,6 +621,7 @@ export function VisualizarEstructura({ initFromOrg = true }: { initFromOrg?: boo
   const [descartarDirectoState, setDescartarDirectoState] = useState<DescartarBorradorState | null>(null);
   const [crearUnidadType, setCrearUnidadType] = useState<UnitType | null>(null);
   const [inactivarGrupoState, setInactivarGrupoState] = useState<InactivarGrupoState | null>(null);
+  const [historialOpen, setHistorialOpen] = useState(false);
 
   // ⋮ context menu state — capture position at click time so the element can unmount safely
   const [dotsPos, setDotsPos] = useState<{ top: number; left: number } | null>(null);
@@ -781,6 +793,7 @@ export function VisualizarEstructura({ initFromOrg = true }: { initFromOrg?: boo
                 }}
                 onDotsClick={e => handleDotsOpen(e, node)}
                 onEditClick={() => v.startInlineEdit(node.id)}
+                onHistorialClick={() => setHistorialOpen(true)}
               />
             )}
             {/* Predictive drop gap */}
@@ -1044,6 +1057,12 @@ export function VisualizarEstructura({ initFromOrg = true }: { initFromOrg?: boo
           setInactivarGrupoState(null);
           v.setSnackbarMsg('Grupo inactivado');
         }}
+      />
+
+      <HistorialDrawer
+        open={historialOpen}
+        eventos={MOCK_EVENTOS}
+        onClose={() => setHistorialOpen(false)}
       />
 
       <Snackbar

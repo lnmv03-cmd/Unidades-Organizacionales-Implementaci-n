@@ -58,6 +58,7 @@ import { ConfirmarAccionDialog } from '@/features/confirmar-accion-unidad';
 import type { AccionDialogState, AccionType } from '@/features/confirmar-accion-unidad';
 import { RevisarBorradorDrawer, DescartarBorradorDialog } from '@/features/revisar-borrador';
 import type { RevisarBorradorState, DescartarBorradorState } from '@/features/revisar-borrador';
+import { HistorialDrawer, MOCK_EVENTOS } from '@/features/historial-unidad';
 import { useEstructuraStore } from '@/shared/model/estructura.store';
 import { UNIT_TYPE_TABS } from '@/shared/config/org-types';
 import type { OrgNode, OrgNodeStatus } from '@/shared/config/org-types';
@@ -303,6 +304,7 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
   const [massSuspendFecha, setMassSuspendFecha] = useState<Dayjs | null>(null);
   const [revisarState, setRevisarState] = useState<RevisarBorradorState | null>(null);
   const [descartarDirectoState, setDescartarDirectoState] = useState<DescartarBorradorState | null>(null);
+  const [historialOpen, setHistorialOpen] = useState(false);
 
   const locGroupNodes = tree.filter(n => n.type === 'root' || n.type === 'grupo');
   const locVisibleNodes = locGroupNodes.filter(node => {
@@ -776,7 +778,11 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
                         </Tooltip>
                       )}
                       <Tooltip title="Historial" placement="top" arrow>
-                        <IconButton size="small" sx={{ p: '4px', color: 'primary.main' }}>
+                        <IconButton
+                          size="small"
+                          sx={{ p: '4px', color: 'primary.main' }}
+                          onClick={() => setHistorialOpen(true)}
+                        >
                           <IconHistory size={14} />
                         </IconButton>
                       </Tooltip>
@@ -1257,6 +1263,12 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
           setSnackbarMsg(`${descartarDirectoState?.unitType ?? 'Unidad'} descartado`);
           setSnackbarOpen(true);
         }}
+      />
+
+      <HistorialDrawer
+        open={historialOpen}
+        eventos={MOCK_EVENTOS}
+        onClose={() => setHistorialOpen(false)}
       />
 
       <Snackbar
