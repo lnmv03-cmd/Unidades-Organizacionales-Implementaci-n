@@ -6,6 +6,7 @@ function sortDFS(nodes: OrgNode[]): OrgNode[] {
   const addChildren = (parentId: string | null) => {
     nodes
       .filter(n => n.parentId === parentId)
+      .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }))
       .forEach(n => { result.push(n); addChildren(n.id); });
   };
   addChildren(null);

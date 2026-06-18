@@ -222,6 +222,7 @@ export function useVisualizarEstructura(initFromOrg = true) {
     setExpandedIds(prev => new Set([...prev, targetId]));
     setDraggingId(null);
     setDropTargetId(null);
+    setSnackbarMsg(`${draggedNode.label} movido a ${targetNode.label}`);
   };
 
   return {

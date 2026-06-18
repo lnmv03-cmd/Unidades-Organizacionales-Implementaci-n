@@ -39,6 +39,7 @@ import {
   IconInfoCircle,
   IconLock,
   IconMap2,
+  IconMapPin,
   IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
@@ -296,6 +297,7 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
   const [accionDialog, setAccionDialog] = useState<AccionDialogState | null>(null);
   const [locExpandedIds, setLocExpandedIds] = useState<Set<string>>(new Set());
   const [locSelectedId, setLocSelectedId] = useState<string | null>(null);
+  const [locOriginalParentId, setLocOriginalParentId] = useState<string | null>(null);
   const [locHoveredId, setLocHoveredId] = useState<string | null>(null);
   const [locationItemId, setLocationItemId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -319,9 +321,17 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
   const openLocation = (e: React.MouseEvent, itemId: string) => {
     setLocExpandedIds(new Set(locGroupNodes.map(n => n.id)));
     const item = tree.find(n => n.id === itemId);
-    setLocSelectedId(item?.parentId ?? null);
+    const parentId = item?.parentId ?? null;
+    setLocSelectedId(parentId);
+    setLocOriginalParentId(parentId);
     setLocationItemId(itemId);
     setLocationAnchor(e.currentTarget as HTMLElement);
+  };
+  const closeLocation = () => {
+    setLocationAnchor(null);
+    setLocationItemId(null);
+    setLocSelectedId(null);
+    setLocOriginalParentId(null);
   };
   const [editCodigo, setEditCodigo] = useState('');
   const [editNombre, setEditNombre] = useState('');
@@ -912,7 +922,7 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
           <Popover
             open={Boolean(locationAnchor)}
             anchorEl={locationAnchor}
-            onClose={() => { setLocationAnchor(null); setLocationItemId(null); }}
+            onClose={closeLocation}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
             transformOrigin={{ vertical: 'top', horizontal: 'left' }}
             slotProps={{
@@ -933,11 +943,13 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
             <Box sx={{ overflow: 'auto', flex: 1 }}>
               {locVisibleNodes.map((node) => {
                 const isRoot = node.type === 'root';
-                const isSelected = locSelectedId === node.id;
+                const isActual = node.id === locOriginalParentId;
+                const isSelected = locSelectedId === node.id && !isActual;
                 const isHovered = locHoveredId === node.id;
                 const hasChildren = locGroupNodes.some(n => n.parentId === node.id);
                 const isExpanded = locExpandedIds.has(node.id);
                 const childCount = tree.filter(n => n.parentId === node.id).length;
+                const isClickable = !isRoot && !isActual;
 
                 return (
                   <Box
@@ -945,7 +957,6 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
                     onMouseEnter={() => setLocHoveredId(node.id)}
                     onMouseLeave={() => setLocHoveredId(null)}
                     onClick={() => {
-                      if (!isRoot) setLocSelectedId(node.id);
                       if (hasChildren) {
                         setLocExpandedIds(prev => {
                           const next = new Set(prev);
@@ -953,21 +964,27 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
                           return next;
                         });
                       }
+                      if (isClickable) {
+                        setLocSelectedId(prev => prev === node.id ? locOriginalParentId : node.id);
+                      }
                     }}
                     sx={{
                       display: 'flex', alignItems: 'center', height: 36,
                       pl: `${4 + node.level * 20}px`, pr: 1.5,
-                      cursor: isRoot ? 'default' : 'pointer',
-                      bgcolor: isSelected ? 'rgba(47,67,208,0.08)' : isHovered && !isRoot ? 'rgba(47,67,208,0.04)' : 'transparent',
+                      cursor: isClickable ? 'pointer' : 'default',
+                      bgcolor: isActual
+                        ? 'rgba(47,67,208,0.06)'
+                        : isSelected
+                          ? 'rgba(47,67,208,0.08)'
+                          : isHovered && isClickable ? 'rgba(47,67,208,0.04)' : 'transparent',
                     }}
                   >
-
                     {/* Chevron */}
                     <Box sx={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {!isRoot && (hasChildren
-                        ? (isExpanded
-                            ? <IconChevronDown size={12} color="rgba(16,24,64,0.54)" />
-                            : <IconChevronRight size={12} color="rgba(16,24,64,0.54)" />)
+                        ? isExpanded
+                          ? <IconChevronDown size={12} color="rgba(16,24,64,0.54)" />
+                          : <IconChevronRight size={12} color="rgba(16,24,64,0.54)" />
                         : null
                       )}
                     </Box>
@@ -975,10 +992,12 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
                     {/* Icon */}
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, mr: '4px' }}>
                       {isSelected
-                        ? <IconCircleCheckFilled size={14} color="#5323de" />
-                        : isRoot
-                          ? <IconBuildingCommunity size={14} color="rgba(16,24,64,0.54)" />
-                          : <IconSitemap size={14} color="rgba(16,24,64,0.54)" />
+                        ? <IconCircleCheckFilled size={14} color="#2f43d0" />
+                        : isActual
+                          ? <IconMapPin size={14} color="#2f43d0" />
+                          : isRoot
+                            ? <IconBuildingCommunity size={14} color="rgba(16,24,64,0.38)" />
+                            : <IconSitemap size={14} color="rgba(16,24,64,0.38)" />
                       }
                     </Box>
 
@@ -988,12 +1007,19 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
                       sx={{
                         flex: 1, fontSize: '0.8125rem', whiteSpace: 'nowrap',
                         overflow: 'hidden', textOverflow: 'ellipsis',
-                        color: isSelected ? 'primary.main' : 'text.primary',
-                        fontWeight: isSelected ? 500 : 400,
+                        color: isActual || isSelected ? 'primary.main' : 'text.primary',
+                        fontWeight: isActual || isSelected ? 500 : 400,
                       }}
                     >
                       {node.label}
                     </Typography>
+
+                    {/* Actual badge */}
+                    {isActual && (
+                      <Typography sx={{ fontSize: '0.6875rem', color: 'rgba(16,24,64,0.46)', letterSpacing: '0.3px', flexShrink: 0, ml: 0.5 }}>
+                        Actual
+                      </Typography>
+                    )}
 
                     {/* Count */}
                     <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0, fontSize: '0.75rem', fontWeight: 500, ml: 0.5 }}>
@@ -1007,22 +1033,30 @@ export function CargarEstructuraExtrayendo({ estado, pendienteTrigger = 0 }: Pro
             {/* Footer */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1, px: 1.5, py: 1, borderTop: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
               <Box
-                onClick={() => { setLocationAnchor(null); setLocationItemId(null); }}
+                onClick={closeLocation}
                 sx={{ cursor: 'pointer', fontSize: '0.8125rem', color: 'text.secondary', px: 1, py: 0.5, borderRadius: 0.5, '&:hover': { bgcolor: 'action.hover' } }}
               >
                 Cancelar
               </Box>
               <Box
                 onClick={() => {
-                  if (locationItemId && locSelectedId) moveNode(locationItemId, locSelectedId);
-                  setLocationAnchor(null);
-                  setLocationItemId(null);
+                  const hasChanged = locSelectedId && locSelectedId !== locOriginalParentId;
+                  if (!hasChanged) return;
+                  const targetNode = tree.find(n => n.id === locSelectedId);
+                  const movedNode = tree.find(n => n.id === locationItemId);
+                  moveNode(locationItemId!, locSelectedId!);
+                  closeLocation();
+                  setSnackbarMsg(`${movedNode?.label ?? 'Unidad'} movida a ${targetNode?.label ?? ''}`);
+                  setSnackbarOpen(true);
                 }}
                 sx={{
-                  cursor: 'pointer', fontSize: '0.8125rem', fontWeight: 500,
-                  bgcolor: 'primary.main', color: 'white',
+                  cursor: locSelectedId && locSelectedId !== locOriginalParentId ? 'pointer' : 'not-allowed',
+                  fontSize: '0.8125rem', fontWeight: 500,
+                  bgcolor: locSelectedId && locSelectedId !== locOriginalParentId ? 'primary.main' : 'rgba(16,24,64,0.12)',
+                  color: locSelectedId && locSelectedId !== locOriginalParentId ? 'white' : 'rgba(16,24,64,0.38)',
                   px: 1.5, py: 0.5, borderRadius: 0.5,
-                  '&:hover': { bgcolor: 'primary.dark' },
+                  transition: 'background-color 0.15s',
+                  '&:hover': { bgcolor: locSelectedId && locSelectedId !== locOriginalParentId ? 'primary.dark' : 'rgba(16,24,64,0.12)' },
                 }}
               >
                 Cambiar

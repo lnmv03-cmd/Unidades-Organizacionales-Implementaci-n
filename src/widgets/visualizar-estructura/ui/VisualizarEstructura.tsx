@@ -306,6 +306,7 @@ interface RowProps {
   hovered: boolean;
 
   isDragging: boolean;
+  isDropTarget: boolean;
   onToggle: () => void;
   onSelect: () => void;
   onMouseEnter: () => void;
@@ -327,7 +328,7 @@ interface RowProps {
 
 function OrgTreeRow({
   node, expanded, hasChildren, hovered,
-  isDragging,
+  isDragging, isDropTarget,
   onToggle, onSelect, onMouseEnter, onMouseLeave,
   onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop,
   onPlusClick, onDotsClick, onEditClick, onHistorialClick,
@@ -363,11 +364,12 @@ function OrgTreeRow({
         boxSizing: 'border-box',
         position: 'relative',
         opacity: isDragging ? 0.25 : 1,
-        bgcolor: hovered ? 'rgba(47,67,208,0.04)' : 'transparent',
+        bgcolor: isDropTarget ? 'rgba(47,67,208,0.1)' : hovered ? 'rgba(47,67,208,0.04)' : 'transparent',
+        boxShadow: isDropTarget ? 'inset 3px 0 0 #2f43d0' : 'none',
         borderBottom: isRoot ? '1px solid' : 'none',
         borderColor: 'divider',
         cursor: isRoot || isUnidad ? 'default' : 'pointer',
-        transition: 'background-color 0.1s, opacity 0.15s',
+        transition: 'background-color 0.1s, opacity 0.15s, box-shadow 0.1s',
       }}
     >
       {/* Drag handle */}
@@ -763,6 +765,7 @@ export function VisualizarEstructura({ initFromOrg = true }: { initFromOrg?: boo
                 hasChildren={v.nodeHasChildren(node.id)}
                 hovered={rowHovered === node.id || dotsNode?.id === node.id}
                 isDragging={v.draggingId === node.id}
+                isDropTarget={v.dropTargetId === node.id}
                 onToggle={() => v.toggleNode(node.id)}
                 onSelect={() => v.setSelectedId(v.selectedId === node.id ? null : node.id)}
                 onMouseEnter={() => setRowHovered(node.id)}
@@ -795,32 +798,6 @@ export function VisualizarEstructura({ initFromOrg = true }: { initFromOrg?: boo
                 onEditClick={() => v.startInlineEdit(node.id)}
                 onHistorialClick={() => setHistorialOpen(true)}
               />
-            )}
-            {/* Predictive drop gap */}
-            {v.dropTargetId === node.id && (
-              <Box sx={{
-                height: 36,
-                pl: `${(node.level + 1) * 20}px`,
-                pr: 2,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                mx: '4px',
-                mb: '1px',
-                bgcolor: 'rgba(47,67,208,0.05)',
-                border: '1.5px dashed rgba(47,67,208,0.35)',
-                borderRadius: '6px',
-                animation: 'dropGapIn 0.12s ease',
-                '@keyframes dropGapIn': {
-                  from: { opacity: 0, transform: 'scaleY(0.4)' },
-                  to:   { opacity: 1, transform: 'scaleY(1)' },
-                },
-              }}>
-                <Box sx={{ width: 14, height: 14, border: '1.5px dashed rgba(47,67,208,0.4)', borderRadius: '3px', flexShrink: 0 }} />
-                <Typography sx={{ fontSize: '0.6875rem', color: 'rgba(47,67,208,0.5)', fontStyle: 'italic', letterSpacing: '0.2px' }}>
-                  Suelta aquí
-                </Typography>
-              </Box>
             )}
             {v.inlineCreate?.parentId === node.id && (
               <InlineInputRow
